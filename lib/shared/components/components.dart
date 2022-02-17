@@ -1,14 +1,14 @@
-import 'package:buildcondition/buildcondition.dart';
+import 'package:conditional_builder/conditional_builder.dart';
 import 'package:flutter/material.dart';
-import 'package:tbib_complete_todo_app/shared/cubit/cubit.dart';
+import 'package:udemy_flutter/shared/cubit/cubit.dart';
 
 Widget defaultButton({
   double width = double.infinity,
   Color background = Colors.blue,
   bool isUpperCase = true,
   double radius = 3.0,
-  required VoidCallback? function,
-  required String text,
+  @required Function function,
+  @required String text,
 }) =>
     Container(
       width: width,
@@ -17,7 +17,7 @@ Widget defaultButton({
         onPressed: function,
         child: Text(
           isUpperCase ? text.toUpperCase() : text,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
           ),
         ),
@@ -31,17 +31,17 @@ Widget defaultButton({
     );
 
 Widget defaultFormField({
-  required TextEditingController controller,
-  required TextInputType type,
-  ValueChanged<String>? onSubmit,
-  ValueChanged<String>? onChange,
-  GestureTapCallback? onTap,
+  @required TextEditingController controller,
+  @required TextInputType type,
+  Function onSubmit,
+  Function onChange,
+  Function onTap,
   bool isPassword = false,
-  required FormFieldValidator<String>? validate,
-  required String label,
-  required IconData prefix,
-  IconData? suffix,
-  VoidCallback? suffixPressed,
+  @required Function validate,
+  @required String label,
+  @required IconData prefix,
+  IconData suffix,
+  Function suffixPressed,
   bool isClickable = true,
 }) =>
     TextFormField(
@@ -66,13 +66,13 @@ Widget defaultFormField({
                 ),
               )
             : null,
-        border: const OutlineInputBorder(),
+        border: OutlineInputBorder(),
       ),
     );
 
 Widget buildTaskItem(Map model, context) => Dismissible(
-      key: Key(model['id'].toString()),
-      child: Padding(
+  key: Key(model['id'].toString()),
+  child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Row(
           children: [
@@ -82,7 +82,7 @@ Widget buildTaskItem(Map model, context) => Dismissible(
                 '${model['time']}',
               ),
             ),
-            const SizedBox(
+            SizedBox(
               width: 20.0,
             ),
             Expanded(
@@ -92,31 +92,32 @@ Widget buildTaskItem(Map model, context) => Dismissible(
                 children: [
                   Text(
                     '${model['title']}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18.0,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     '${model['date']}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.grey,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(
+            SizedBox(
               width: 20.0,
             ),
             IconButton(
-              onPressed: () {
+              onPressed: ()
+              {
                 AppCubit.get(context).updateData(
                   status: 'done',
                   id: model['id'],
                 );
               },
-              icon: const Icon(
+              icon: Icon(
                 Icons.check_box,
                 color: Colors.green,
               ),
@@ -128,7 +129,7 @@ Widget buildTaskItem(Map model, context) => Dismissible(
                   id: model['id'],
                 );
               },
-              icon: const Icon(
+              icon: Icon(
                 Icons.archive,
                 color: Colors.black45,
               ),
@@ -136,52 +137,51 @@ Widget buildTaskItem(Map model, context) => Dismissible(
           ],
         ),
       ),
-      onDismissed: (direction) {
-        AppCubit.get(context).deleteData(
-          id: model['id'],
-        );
-      },
-    );
+  onDismissed: (direction)
+  {
+    AppCubit.get(context).deleteData(id: model['id'],);
+  },
+);
 
 Widget tasksBuilder({
-  required List<Map> tasks,
-}) =>
-    BuildCondition(
-      condition: tasks.isNotEmpty,
-      builder: (context) => ListView.separated(
-        itemBuilder: (context, index) {
-          return buildTaskItem(tasks[index], context);
-        },
-        separatorBuilder: (context, index) => Padding(
-          padding: const EdgeInsetsDirectional.only(
-            start: 20.0,
-          ),
-          child: Container(
-            width: double.infinity,
-            height: 1.0,
-            color: Colors.grey[300],
+  @required List<Map> tasks,
+}) => ConditionalBuilder(
+  condition: tasks.length > 0,
+  builder: (context) => ListView.separated(
+    itemBuilder: (context, index)
+    {
+      return buildTaskItem(tasks[index], context);
+    },
+    separatorBuilder: (context, index) => Padding(
+      padding: const EdgeInsetsDirectional.only(
+        start: 20.0,
+      ),
+      child: Container(
+        width: double.infinity,
+        height: 1.0,
+        color: Colors.grey[300],
+      ),
+    ),
+    itemCount: tasks.length,
+  ),
+  fallback: (context) => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.menu,
+          size: 100.0,
+          color: Colors.grey,
+        ),
+        Text(
+          'No Tasks Yet, Please Add Some Tasks',
+          style: TextStyle(
+            fontSize: 16.0,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
           ),
         ),
-        itemCount: tasks.length,
-      ),
-      fallback: (context) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.menu,
-              size: 100.0,
-              color: Colors.grey,
-            ),
-            const Text(
-              'No Tasks Yet, Please Add Some Tasks',
-              style: TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
