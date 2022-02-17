@@ -1,15 +1,12 @@
-import 'package:conditional_builder/conditional_builder.dart';
+import 'dart:developer';
+
+import 'package:buildcondition/buildcondition.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:udemy_flutter/modules/archived_tasks/archived_tasks_screen.dart';
-import 'package:udemy_flutter/modules/done_tasks/done_tasks_screen.dart';
-import 'package:udemy_flutter/modules/new_tasks/new_tasks_screen.dart';
-import 'package:udemy_flutter/shared/components/components.dart';
-import 'package:udemy_flutter/shared/components/constants.dart';
-import 'package:udemy_flutter/shared/cubit/cubit.dart';
-import 'package:udemy_flutter/shared/cubit/states.dart';
+import 'package:tbib_complete_todo_app/shared/components/components.dart';
+import 'package:tbib_complete_todo_app/shared/cubit/cubit.dart';
+import 'package:tbib_complete_todo_app/shared/cubit/states.dart';
 
 // 1. create database
 // 2. create tables
@@ -20,21 +17,21 @@ import 'package:udemy_flutter/shared/cubit/states.dart';
 // 7. delete from database
 
 class HomeLayout extends StatelessWidget {
-  var scaffoldKey = GlobalKey<ScaffoldState>();
-  var formKey = GlobalKey<FormState>();
-  var titleController = TextEditingController();
-  var timeController = TextEditingController();
-  var dateController = TextEditingController();
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+  final formKey = GlobalKey<FormState>();
+  final titleController = TextEditingController();
+  final timeController = TextEditingController();
+  final dateController = TextEditingController();
+
+  HomeLayout({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context)
-  {
+  Widget build(BuildContext context) {
     return BlocProvider(
       create: (BuildContext context) => AppCubit()..createDatabase(),
       child: BlocConsumer<AppCubit, AppStates>(
         listener: (BuildContext context, AppStates state) {
-          if(state is AppInsertDatabaseState)
-          {
+          if (state is AppInsertDatabaseState) {
             Navigator.pop(context);
           }
         },
@@ -48,30 +45,28 @@ class HomeLayout extends StatelessWidget {
                 cubit.titles[cubit.currentIndex],
               ),
             ),
-            body: ConditionalBuilder(
+            body: BuildCondition(
               condition: state is! AppGetDatabaseLoadingState,
               builder: (context) => cubit.screens[cubit.currentIndex],
-              fallback: (context) => Center(child: CircularProgressIndicator()),
+              fallback: (context) =>
+                  const Center(child: CircularProgressIndicator()),
             ),
             floatingActionButton: FloatingActionButton(
               onPressed: () {
-                if (cubit.isBottomSheetShown)
-                {
-                  if (formKey.currentState.validate())
-                  {
+                if (cubit.isBottomSheetShown) {
+                  if (formKey.currentState!.validate()) {
                     cubit.insertToDatabase(
                       title: titleController.text,
                       time: timeController.text,
                       date: dateController.text,
                     );
                   }
-                } else
-                  {
-                  scaffoldKey.currentState
+                } else {
+                  scaffoldKey.currentState!
                       .showBottomSheet(
                         (context) => Container(
                           color: Colors.white,
-                          padding: EdgeInsets.all(
+                          padding: const EdgeInsets.all(
                             20.0,
                           ),
                           child: Form(
@@ -82,8 +77,8 @@ class HomeLayout extends StatelessWidget {
                                 defaultFormField(
                                   controller: titleController,
                                   type: TextInputType.text,
-                                  validate: (String value) {
-                                    if (value.isEmpty) {
+                                  validate: (String? value) {
+                                    if (value == null || value.isEmpty) {
                                       return 'title must not be empty';
                                     }
 
@@ -92,7 +87,7 @@ class HomeLayout extends StatelessWidget {
                                   label: 'Task Title',
                                   prefix: Icons.title,
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   height: 15.0,
                                 ),
                                 defaultFormField(
@@ -104,12 +99,12 @@ class HomeLayout extends StatelessWidget {
                                       initialTime: TimeOfDay.now(),
                                     ).then((value) {
                                       timeController.text =
-                                          value.format(context).toString();
-                                      print(value.format(context));
+                                          value!.format(context).toString();
+                                      log(value.format(context));
                                     });
                                   },
-                                  validate: (String value) {
-                                    if (value.isEmpty) {
+                                  validate: (String? value) {
+                                    if (value == null || value.isEmpty) {
                                       return 'time must not be empty';
                                     }
 
@@ -118,7 +113,7 @@ class HomeLayout extends StatelessWidget {
                                   label: 'Task Time',
                                   prefix: Icons.watch_later_outlined,
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   height: 15.0,
                                 ),
                                 defaultFormField(
@@ -129,14 +124,14 @@ class HomeLayout extends StatelessWidget {
                                       context: context,
                                       initialDate: DateTime.now(),
                                       firstDate: DateTime.now(),
-                                      lastDate: DateTime.parse('2021-05-03'),
+                                      lastDate: DateTime.parse('2030-05-03'),
                                     ).then((value) {
                                       dateController.text =
-                                          DateFormat.yMMMd().format(value);
+                                          DateFormat.yMMMd().format(value!);
                                     });
                                   },
-                                  validate: (String value) {
-                                    if (value.isEmpty) {
+                                  validate: (String? value) {
+                                    if (value == null || value.isEmpty) {
                                       return 'date must not be empty';
                                     }
 
@@ -152,8 +147,7 @@ class HomeLayout extends StatelessWidget {
                         elevation: 20.0,
                       )
                       .closed
-                      .then((value)
-                  {
+                      .then((value) {
                     cubit.changeBottomSheetState(
                       isShow: false,
                       icon: Icons.edit,
@@ -177,20 +171,20 @@ class HomeLayout extends StatelessWidget {
                 cubit.changeIndex(index);
               },
               items: [
-                BottomNavigationBarItem(
+                const BottomNavigationBarItem(
                   icon: Icon(
                     Icons.menu,
                   ),
                   label: 'Tasks',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(
+                const BottomNavigationBarItem(
+                  icon: const Icon(
                     Icons.check_circle_outline,
                   ),
                   label: 'Done',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(
+                const BottomNavigationBarItem(
+                  icon: const Icon(
                     Icons.archive_outlined,
                   ),
                   label: 'Archived',
